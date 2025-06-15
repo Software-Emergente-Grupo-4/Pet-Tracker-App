@@ -102,9 +102,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await keyValueStorageService.setKeyValue('token', user.token);
     await keyValueStorageService.setKeyValue('userId', user.id.toString());
 
-    // 🔍 Log del token para usarlo en Swagger
-    print('🟢 TOKEN COPIA PARA SWAGGER: Bearer ${user.token}');
-
     state = state.copyWith(
       user: user,
       authStatus: AuthStatus.authenticated,

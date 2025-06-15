@@ -25,7 +25,7 @@ class GeofenceDatasourceImpl implements GeofenceDatasource {
         print('>>> Token not found');
         throw Exception('Token not found');
       }
-      
+
       final userId = await storageService.getValue<String>('userId');
       if (userId == null) {
         print('>>> User ID not found');
@@ -45,15 +45,12 @@ class GeofenceDatasourceImpl implements GeofenceDatasource {
         'userId': userId,
       };
 
-      print('>>> Creating geofence with data: $data');
-
       final response = await dio.post(
         '/geo-fences',
         data: data,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      print('>>> Geofence created successfully: ${response.data}');
       return GeofenceMapper.fromJson(response.data);
     } on DioException catch (e) {
       print('>>> Error creating geofence: ${e.response?.data ?? e.message}');
@@ -76,15 +73,12 @@ class GeofenceDatasourceImpl implements GeofenceDatasource {
         throw Exception('User ID not found');
       }
 
-      print('>>> Fetching geofences for device $selectedDeviceRecordId and user $userId');
-
       final response = await dio.get(
         '/devices/$selectedDeviceRecordId/geo-fences',
         queryParameters: {'userId': userId},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      print('>>> Geofences fetched: ${response.data}');
       return (response.data as List)
           .map((data) => GeofenceMapper.fromJson(data))
           .toList();
@@ -122,15 +116,12 @@ class GeofenceDatasourceImpl implements GeofenceDatasource {
         'userId': userId,
       };
 
-      print('>>> Updating geofence with data: $data');
-
       final response = await dio.put(
         '/geo-fences/${geofence.id}',
         data: data,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      print('>>> Geofence updated successfully: ${response.data}');
       return GeofenceMapper.fromJson(response.data);
     } on DioException catch (e) {
       print('>>> Error updating geofence: ${e.response?.data ?? e.message}');

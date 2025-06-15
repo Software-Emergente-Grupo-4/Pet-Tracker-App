@@ -56,7 +56,6 @@ class GeofenceNotifier extends StateNotifier<GeofenceState> {
 
       final userDevices = await deviceRepository.getAllDevices(userId);
 
-      // 🧹 Limpiar todo si el usuario no tiene dispositivos
       if (userDevices.isEmpty) {
         await storageService.removeKey('selectedDeviceRecordId');
         state = state.copyWith(
@@ -67,7 +66,6 @@ class GeofenceNotifier extends StateNotifier<GeofenceState> {
         return;
       }
 
-      // ✅ Si no hay dispositivo seleccionado, asignamos uno por defecto
       if (selectedDeviceRecordId == null) {
         selectedDeviceRecordId = userDevices.first.petTrackerDeviceRecordId;
         await storageService.setKeyValue<String>(
