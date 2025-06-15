@@ -10,7 +10,6 @@ class KeyValueStorageServiceImpl extends KeyValueStorageService {
   Future<T?> getValue<T>(String key) async {
     final prefs = await getSharedPrefs();
     final value = prefs.get(key);
-    print('>>> [GET] Key: [$key] Value: [$value]'); // Log de depuración
 
     if (T == int) {
       return prefs.getInt(key) as T?;
@@ -30,7 +29,6 @@ class KeyValueStorageServiceImpl extends KeyValueStorageService {
   @override
   Future<void> setKeyValue<T>(String key, T value) async {
     final prefs = await getSharedPrefs();
-    print('>>> [SET] Key: [$key] Value: [$value]'); // Log de depuración
 
     if (value is int) {
       await prefs.setInt(key, value);
@@ -50,7 +48,6 @@ class KeyValueStorageServiceImpl extends KeyValueStorageService {
   @override
   Future<bool> removeKey(String key) async {
     final prefs = await getSharedPrefs();
-    print('>>> [REMOVE] Key: [$key]'); // Log de depuración
     return await prefs.remove(key);
   }
 }

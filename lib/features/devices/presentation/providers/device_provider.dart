@@ -80,22 +80,16 @@ class DeviceAssignNotifier extends StateNotifier<AsyncValue<void>> {
       BuildContext context, String deviceRecordId, String userId) async {
     state = const AsyncValue.loading();
 
-    // >>> LOG importante
     print('>>> Intentando asignar deviceRecordId: $deviceRecordId a userId: $userId');
 
     try {
       final assignedDevice =
           await repository.assignDeviceToUser(deviceRecordId, userId);
 
-      // Guardar valores en storage
       await storageService.setKeyValue<String>(
           'selectedDeviceRecordId', assignedDevice.petTrackerDeviceRecordId);
       await storageService.setKeyValue<String>(
           'selectedApiKey', assignedDevice.apiKey);
-
-      print('>>> Asignación exitosa del dispositivo');
-      print('>>> selectedDeviceRecordId guardado: ${assignedDevice.petTrackerDeviceRecordId}');
-      print('>>> selectedApiKey guardado: ${assignedDevice.apiKey}');
 
       if (Navigator.canPop(context)) {
         Navigator.of(context).pop();
