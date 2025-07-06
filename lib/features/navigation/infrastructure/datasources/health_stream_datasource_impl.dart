@@ -9,7 +9,6 @@ class HealthStreamDatasourceImpl {
   HealthStreamDatasourceImpl({required this.baseUrl});
 
   Stream<HealthMeasure> connectToHealthStream(String roomId) {
-    // Cerrar la conexión previa si existe
     disconnect();
 
     final uri = Uri.parse('$baseUrl/health-measures-stream?room=$roomId');

@@ -8,6 +8,7 @@ import 'package:pet_tracker/features/geofences/presentation/providers/providers.
 import 'package:pet_tracker/features/geofences/presentation/widgets/geofences_map_widget.dart';
 import 'package:pet_tracker/shared/infrastructure/services/key_value_storage_provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:pet_tracker/shared/widgets/polygon_utils.dart';
 
 class GeofenceDetailsScreen extends ConsumerStatefulWidget {
   final Geofence? geofence;
@@ -56,67 +57,70 @@ class GeofenceDetailsScreenState extends ConsumerState<GeofenceDetailsScreen> {
   }
 
   Future<void> _saveChanges() async {
-    final mapNotifier = ref.read(mapProvider);
-    final coordinates = mapNotifier.geofencePoints
-        .map((point) =>
-            Coordinate(latitude: point.latitude, longitude: point.longitude))
-        .toList();
+  final mapNotifier = ref.read(mapProvider);
 
-    final storageService = ref.read(keyValueStorageServiceProvider);
-    final deviceRecordId =
-        await storageService.getValue<String>('selectedDeviceRecordId');
-    if (deviceRecordId == null) {
+  final sortedCoordinates = PolygonUtils.convexHull(mapNotifier.geofencePoints);
+
+  final coordinates = sortedCoordinates
+      .map((point) => Coordinate(latitude: point.latitude, longitude: point.longitude))
+      .toList();
+
+  final storageService = ref.read(keyValueStorageServiceProvider);
+  final deviceRecordId = await storageService.getValue<String>('selectedDeviceRecordId');
+  
+  if (deviceRecordId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Device ID not found. Please select a device."),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  final geofence = widget.isEditMode
+      ? widget.geofence!.copyWith(
+          name: _nameController.text,
+          coordinates: coordinates,
+          geoFenceStatus: _geoFenceStatus,
+        )
+      : Geofence(
+          id: 0,
+          name: _nameController.text,
+          geoFenceStatus: _geoFenceStatus,
+          coordinates: coordinates,
+          petTrackerDeviceRecordId: deviceRecordId,
+        );
+
+  try {
+    if (widget.isEditMode) {
+      await ref.read(geofenceProvider.notifier).updateGeofence(geofence);
+    } else {
+      await ref.read(geofenceProvider.notifier).addGeofence(geofence);
+    }
+
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Device ID not found. Please select a device."),
+        SnackBar(
+          content: Text(widget.isEditMode
+              ? 'Geofence updated successfully'
+              : 'Geofence created successfully'),
+        ),
+      );
+      context.go('/geofences');
+    }
+  } catch (error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Failed to ${widget.isEditMode ? "update" : "create"} geofence: $error'),
           backgroundColor: Colors.red,
         ),
       );
-      return;
-    }
-
-    final geofence = widget.isEditMode
-        ? widget.geofence!.copyWith(
-            name: _nameController.text,
-            coordinates: coordinates,
-            geoFenceStatus: _geoFenceStatus,
-          )
-        : Geofence(
-            id: 0,
-            name: _nameController.text,
-            geoFenceStatus: _geoFenceStatus,
-            coordinates: coordinates,
-            petTrackerDeviceRecordId: deviceRecordId,
-          );
-
-    try {
-      if (widget.isEditMode) {
-        await ref.read(geofenceProvider.notifier).updateGeofence(geofence);
-      } else {
-        await ref.read(geofenceProvider.notifier).addGeofence(geofence);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(widget.isEditMode
-                  ? 'Geofence updated successfully'
-                  : 'Geofence created successfully')),
-        );
-        context.go('/geofences');
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Failed to ${widget.isEditMode ? "update" : "create"} geofence: $error'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
     }
   }
+}
 
   void _removeCoordinate(int index) {
     ref.read(mapProvider).removeGeofencePoint(index);

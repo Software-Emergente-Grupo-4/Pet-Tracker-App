@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pet_tracker/shared/widgets/polygon_utils.dart';
 import 'package:latlong2/latlong.dart';
 
 class MapNotifier extends ChangeNotifier {
@@ -11,14 +12,16 @@ class MapNotifier extends ChangeNotifier {
   MapNotifier({required this.mapController});
 
   void initializePoints(List<LatLng> initialPoints) {
-    geofencePoints = List.from(initialPoints);
-    _sortPointsByClosestPath();
+    geofencePoints =
+        PolygonUtils.convexHull(initialPoints); // Usamos Convex Hull
     notifyListeners();
   }
 
   void addGeofencePoint(LatLng point) {
     if (geofencePoints.length < 4) {
       geofencePoints.add(point);
+      geofencePoints =
+          PolygonUtils.convexHull(geofencePoints);
       notifyListeners();
     }
   }
@@ -26,31 +29,10 @@ class MapNotifier extends ChangeNotifier {
   void removeGeofencePoint(int index) {
     if (index >= 0 && index < geofencePoints.length) {
       geofencePoints.removeAt(index);
+      geofencePoints =
+          PolygonUtils.convexHull(geofencePoints);
       notifyListeners();
     }
-  }
-
-  void _sortPointsByClosestPath() {
-    if (geofencePoints.length <= 1) return;
-
-    List<LatLng> sortedPoints = [];
-    Set<LatLng> remainingPoints = Set.from(geofencePoints);
-    LatLng currentPoint = remainingPoints.first;
-    sortedPoints.add(currentPoint);
-    remainingPoints.remove(currentPoint);
-
-    while (remainingPoints.isNotEmpty) {
-      LatLng closestPoint = remainingPoints.reduce((a, b) =>
-          distance.as(LengthUnit.Meter, currentPoint, a) <
-                  distance.as(LengthUnit.Meter, currentPoint, b)
-              ? a
-              : b);
-      sortedPoints.add(closestPoint);
-      remainingPoints.remove(closestPoint);
-      currentPoint = closestPoint;
-    }
-
-    geofencePoints = sortedPoints;
   }
 
   void moveToLocation(LatLng position) {

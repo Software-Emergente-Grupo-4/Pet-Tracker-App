@@ -30,8 +30,7 @@ class DeviceNotifier extends StateNotifier<AsyncValue<List<Device>>> {
     try {
       await storageService.setKeyValue<String>(
           'selectedDeviceRecordId', device.petTrackerDeviceRecordId);
-      await storageService.setKeyValue<String>(
-          'selectedApiKey', device.apiKey);
+      await storageService.setKeyValue<String>('selectedApiKey', device.apiKey);
     } catch (e) {
       print("Error al seleccionar el dispositivo: $e");
     }
@@ -52,12 +51,13 @@ class DeviceNotifier extends StateNotifier<AsyncValue<List<Device>>> {
         device.petTrackerDeviceRecordId,
       );
 
+      // Actualiza la lista de dispositivos en el estado
       state = state.whenData((devices) {
         return devices
-            .map((d) =>
-                d.petTrackerDeviceRecordId == updatedDevice.petTrackerDeviceRecordId
-                    ? updatedDevice
-                    : d)
+            .map((d) => d.petTrackerDeviceRecordId ==
+                    updatedDevice.petTrackerDeviceRecordId
+                ? updatedDevice
+                : d)
             .toList();
       });
     } catch (e, stackTrace) {
@@ -69,27 +69,15 @@ class DeviceNotifier extends StateNotifier<AsyncValue<List<Device>>> {
 
 class DeviceAssignNotifier extends StateNotifier<AsyncValue<void>> {
   final DeviceRepositoryImpl repository;
-  final KeyValueStorageService storageService;
 
-  DeviceAssignNotifier({
-    required this.repository,
-    required this.storageService,
-  }) : super(const AsyncData(null));
+  DeviceAssignNotifier({required this.repository})
+      : super(const AsyncData(null));
 
   Future<void> assignDeviceToUser(
       BuildContext context, String deviceRecordId, String userId) async {
     state = const AsyncValue.loading();
-
-    print('>>> Intentando asignar deviceRecordId: $deviceRecordId a userId: $userId');
-
     try {
-      final assignedDevice =
-          await repository.assignDeviceToUser(deviceRecordId, userId);
-
-      await storageService.setKeyValue<String>(
-          'selectedDeviceRecordId', assignedDevice.petTrackerDeviceRecordId);
-      await storageService.setKeyValue<String>(
-          'selectedApiKey', assignedDevice.apiKey);
+      await repository.assignDeviceToUser(deviceRecordId, userId);
 
       if (Navigator.canPop(context)) {
         Navigator.of(context).pop();
@@ -97,27 +85,13 @@ class DeviceAssignNotifier extends StateNotifier<AsyncValue<void>> {
 
       state = const AsyncValue.data(null);
     } on DioException catch (e, stackTrace) {
-      final errorMessage =
-          e.response?.data?['message'] ?? 'Device not found (DioException)';
-
-      print('>>> DioException al asignar: $errorMessage');
-      print('>>> DioResponse: ${e.response}');
-
+      final errorMessage = e.response?.data?['message'] ?? 'Device not found';
       state = AsyncValue.error(errorMessage, stackTrace);
 
+      // Muestra el error en un SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } catch (e, stackTrace) {
-      print('>>> Error inesperado al asignar: $e');
-      state = AsyncValue.error(e, stackTrace);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
           backgroundColor: Colors.red,
         ),
       );
@@ -156,10 +130,6 @@ final deviceAssignProvider =
     StateNotifierProvider<DeviceAssignNotifier, AsyncValue<void>>(
   (ref) {
     final repository = ref.watch(deviceRepositoryProvider);
-    final storageService = ref.watch(keyValueStorageServiceProvider);
-    return DeviceAssignNotifier(
-      repository: repository,
-      storageService: storageService,
-    );
+    return DeviceAssignNotifier(repository: repository);
   },
 );

@@ -15,16 +15,6 @@ class GeofenceCard extends StatelessWidget {
         .map((coord) => LatLng(coord.latitude, coord.longitude))
         .toList();
 
-    if (coordinates.isEmpty) {
-      return Card(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text("Geofence has no coordinates", style: TextStyle(color: Colors.red)),
-        ),
-      );
-    }
-
     // !CameraFit -> FitCoordinates: ajusta todas las coordenadas
     final cameraFit = CameraFit.coordinates(
       coordinates: coordinates,
