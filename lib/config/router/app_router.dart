@@ -53,7 +53,7 @@ final goRouterProvider = Provider((ref) {
           ),
           GoRoute(
             path: '/vital-signs',
-            builder: (context, state) => const VitalSignsScreen(),
+            builder: (context, state) => const HealthSummaryScreen(),
           ),
           GoRoute(
             path: '/geofences',
