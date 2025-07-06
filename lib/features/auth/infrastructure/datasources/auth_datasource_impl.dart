@@ -1,16 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:pet_tracker/config/consts/environments.dart';
 import 'package:pet_tracker/features/auth/domain/domain.dart';
+import 'package:pet_tracker/features/auth/domain/entities/register_request.dart';
 import 'package:pet_tracker/features/auth/infrastructure/infrastructure.dart';
 import 'package:pet_tracker/shared/infrastructure/services/key_value_storage_service.dart';
 
 class AuthDatasourceImpl extends AuthDatasource {
   final Dio dio = Dio(BaseOptions(
     baseUrl: Environment.apiUrl,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
   ));
   final KeyValueStorageService storageService;
 
@@ -52,29 +50,16 @@ class AuthDatasourceImpl extends AuthDatasource {
   }
 
   @override
-  Future<AuthenticatedUser> register(
-      String username,
-      String password,
-      List<String> roles,
-      String email,
-      String firstName,
-      String lastName
-  ) async {
+  Future<AuthenticatedUser> register(RegisterRequest request) async {
     try {
       final response = await dio.post(
         '/authentication/sign-up',
-        data: {
-          'username': username,
-          'email': email,
-          'firstName': firstName,
-          'lastName': lastName,
-          'password': password,
-          'roles': roles,
-        },
+        data: request.toJson(),
       );
+
       return UserMapper.userJsonToEntity(response.data);
-    } catch (e) {
-      throw Exception('Registration failed');
+    } on DioException catch (e) {
+      throw Exception('Registration failed: ${e.message}');
     }
   }
 

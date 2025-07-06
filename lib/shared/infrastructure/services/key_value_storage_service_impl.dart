@@ -9,7 +9,6 @@ class KeyValueStorageServiceImpl extends KeyValueStorageService {
   @override
   Future<T?> getValue<T>(String key) async {
     final prefs = await getSharedPrefs();
-    final value = prefs.get(key);
 
     if (T == int) {
       return prefs.getInt(key) as T?;
@@ -49,5 +48,11 @@ class KeyValueStorageServiceImpl extends KeyValueStorageService {
   Future<bool> removeKey(String key) async {
     final prefs = await getSharedPrefs();
     return await prefs.remove(key);
+  }
+
+  @override
+  Future<void> removeAllKeys() async {
+    final prefs = await getSharedPrefs();
+    await prefs.clear();
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';  // <-- AÑADIDO
+import 'package:go_router/go_router.dart';
 import 'package:pet_tracker/features/auth/presentation/providers/auth_provider.dart';
 import 'package:pet_tracker/features/auth/presentation/providers/providers.dart';
 import 'package:pet_tracker/shared/widgets/widgets.dart';
@@ -42,7 +42,8 @@ class LoginScreen extends ConsumerWidget {
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -94,7 +95,7 @@ class LoginScreen extends ConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () {
-                              context.push('/register');
+                              context.go('/register');
                             },
                             child: const Text(
                               'Sign up here',
@@ -104,9 +105,7 @@ class LoginScreen extends ConsumerWidget {
                         ],
                       ),
                       TextButton(
-                        onPressed: () {
-                          // Por ahora no implementamos forgot password
-                        },
+                        onPressed: () {},
                         child: const Text(
                           'Forgot your password?',
                           style: TextStyle(color: Colors.blue),
