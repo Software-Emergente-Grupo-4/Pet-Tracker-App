@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pet_tracker/features/auth/domain/domain.dart';
-import 'package:pet_tracker/shared/infrastructure/services/key_value_storage_service.dart';
+import 'package:pet_tracker/features/auth/domain/entities/register_request.dart';
 import 'package:pet_tracker/shared/infrastructure/services/key_value_storage_provider.dart';
+import 'package:pet_tracker/shared/infrastructure/services/key_value_storage_service.dart';
 import '../../infrastructure/infrastructure.dart';
 
 enum AuthStatus { checking, authenticated, unauthenticated }
@@ -48,7 +49,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> loginUser(String username, String password) async {
     try {
       final authenticatedUser = await authRepository.login(username, password);
-      await _setLoggedUser(authenticatedUser);
+      _setLoggedUser(authenticatedUser);
+
       final userProfile =
           await authRepository.fetchUserProfile(authenticatedUser.id);
       state = state.copyWith(userProfile: userProfile);
@@ -57,27 +59,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> registerUser(
-    String username,
-    String password,
-    List<String> roles,
-    String email,
-    String firstName,
-    String lastName,
-  ) async {
+  Future<void> registerUser({
+    required String username,
+    required String password,
+    required String email,
+    required String firstName,
+    required String lastName,
+    List<String> roles = const ['ROLE_ADMIN'],
+  }) async {
     try {
-      final authenticatedUser = await authRepository.register(
-        username,
-        password,
-        roles,
-        email,
-        firstName,
-        lastName,
+      final request = RegisterRequest(
+        username: username,
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        roles: roles,
       );
-      await _setLoggedUser(authenticatedUser);
-      final userProfile =
-          await authRepository.fetchUserProfile(authenticatedUser.id);
-      state = state.copyWith(userProfile: userProfile);
+
+      await authRepository.register(request);
     } catch (e) {
       logout('Registration failed');
     }
@@ -85,11 +85,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void checkAuthStatus() async {
     final token = await keyValueStorageService.getValue<String>('token');
-    if (token == null) return logout();
+    if (token == null) {
+      return logout();
+    }
 
     try {
       final authenticatedUser = await authRepository.checkAuthStatus(token);
-      await _setLoggedUser(authenticatedUser);
+      _setLoggedUser(authenticatedUser);
+
       final userProfile =
           await authRepository.fetchUserProfile(authenticatedUser.id);
       state = state.copyWith(userProfile: userProfile);
@@ -98,10 +101,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> _setLoggedUser(AuthenticatedUser user) async {
+  void _setLoggedUser(AuthenticatedUser user) async {
     await keyValueStorageService.setKeyValue('token', user.token);
-    await keyValueStorageService.setKeyValue('userId', user.id.toString());
-
+    await keyValueStorageService.setKeyValue(
+        'selectedDeviceRecordId', '123456789');
+    await keyValueStorageService.setKeyValue('selectedApiKey', '123456789');
     state = state.copyWith(
       user: user,
       authStatus: AuthStatus.authenticated,
@@ -110,10 +114,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout([String? errorMessage]) async {
-    await keyValueStorageService.removeKey('token');
-    await keyValueStorageService.removeKey('userId');
-    await keyValueStorageService.removeKey('selectedDeviceRecordId');
-    await keyValueStorageService.removeKey('selectedApiKey');
+    await keyValueStorageService.removeAllKeys();
     state = state.copyWith(
       authStatus: AuthStatus.unauthenticated,
       user: null,

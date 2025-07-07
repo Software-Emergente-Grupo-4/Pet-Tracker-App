@@ -22,13 +22,12 @@ class GeofenceMapWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mapNotifier = ref.watch(mapProvider);
 
-    final rawCoords = mapNotifier.geofencePoints.isNotEmpty
+    final coordinates = mapNotifier.geofencePoints.isNotEmpty
         ? mapNotifier.geofencePoints
-        : geofence?.coordinates
-            .map((coord) => LatLng(coord.latitude, coord.longitude))
-            .toList() ?? [];
-
-    final coordinates = rawCoords.isNotEmpty ? rawCoords : [defaultLocation];
+        : (geofence?.coordinates
+                .map((coord) => LatLng(coord.latitude, coord.longitude))
+                .toList() ??
+            [defaultLocation]);
 
     final cameraFit = CameraFit.coordinates(
       coordinates: coordinates,

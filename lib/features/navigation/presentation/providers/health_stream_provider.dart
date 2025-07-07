@@ -7,7 +7,7 @@ final healthStreamProvider =
     StateNotifierProvider<HealthStreamNotifier, AsyncValue<HealthMeasure>>(
   (ref) {
     final datasource = HealthStreamDatasourceImpl(
-      baseUrl: 'wss://pettracker.azurewebsites.net',
+      baseUrl: 'wss://pet-tracker.azurewebsites.net',
     );
     return HealthStreamNotifier(datasource: datasource, ref: ref);
   },

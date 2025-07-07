@@ -33,8 +33,6 @@ final goRouterProvider = Provider((ref) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-
-      //! ShellRoute principal con BottomNavigationBar
       ShellRoute(
         builder: (context, state, child) => MainScreen(child: child),
         routes: [
@@ -59,12 +57,17 @@ final goRouterProvider = Provider((ref) {
             path: '/geofences',
             builder: (context, state) => const GeofencesScreen(),
           ),
+
+          // !Into geofences
           GoRoute(
             path: '/geofences/create',
-            builder: (context, state) => const GeofenceDetailsScreen(isEditMode: false),
+            builder: (context, state) => const GeofenceDetailsScreen(
+              isEditMode: false,
+            ),
           ),
           GoRoute(
-            path: '/geofences/detail/:id',
+            path:
+                '/geofences/detail/:id',
             builder: (context, state) {
               final geofence = state.extra as Geofence;
               return GeofenceDetailsScreen(
@@ -91,8 +94,8 @@ final goRouterProvider = Provider((ref) {
       ),
     ],
     redirect: (context, state) {
-      final isGoingTo = state.matchedLocation;
       final authStatus = goRouterNotifier.authStatus;
+      final isGoingTo = state.matchedLocation;
 
       if (isGoingTo == '/splash' && authStatus == AuthStatus.checking) {
         return null;

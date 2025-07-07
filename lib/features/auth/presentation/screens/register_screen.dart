@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:pet_tracker/features/auth/presentation/providers/register_form_provider.dart';
-import 'package:pet_tracker/shared/widgets/widgets.dart';
+import 'package:pet_tracker/features/auth/presentation/providers/providers.dart';
+import 'package:pet_tracker/shared/shared.dart';
 
 class RegisterScreen extends ConsumerWidget {
   const RegisterScreen({super.key});
@@ -10,14 +9,22 @@ class RegisterScreen extends ConsumerWidget {
   void showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(registerFormProvider, (previous, current) {
+      if (current.isFormPosted && !current.isValid) {
+        showSnackBar(context, "Please correct the errors in the form.");
+      }
+    });
+
     final registerForm = ref.watch(registerFormProvider);
-    final registerNotifier = ref.read(registerFormProvider.notifier);
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -34,7 +41,8 @@ class RegisterScreen extends ConsumerWidget {
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -54,11 +62,12 @@ class RegisterScreen extends ConsumerWidget {
                       const Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          "Create your account",
+                          "Sign up to",
                           style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500),
+                            fontSize: 20,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 5),
@@ -70,82 +79,50 @@ class RegisterScreen extends ConsumerWidget {
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      CustomTextFormField(
-                        label: 'Username',
-                        onChanged: registerNotifier.onUsernameChanged,
-                        errorMessage: registerForm.isFormPosted ? registerForm.username.errorMessage : null,
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextFormField(
-                        label: 'Email',
-                        onChanged: registerNotifier.onEmailChanged,
-                        errorMessage: registerForm.isFormPosted ? registerForm.email.errorMessage : null,
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextFormField(
-                        label: 'First Name',
-                        onChanged: registerNotifier.onFirstNameChanged,
-                        errorMessage: registerForm.isFormPosted ? registerForm.firstName.errorMessage : null,
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextFormField(
-                        label: 'Last Name',
-                        onChanged: registerNotifier.onLastNameChanged,
-                        errorMessage: registerForm.isFormPosted ? registerForm.lastName.errorMessage : null,
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextFormField(
-                        label: 'Password',
-                        obscureText: true,
-                        onChanged: registerNotifier.onPasswordChanged,
-                        errorMessage: registerForm.isFormPosted ? registerForm.password.errorMessage : null,
-                      ),
-                      const SizedBox(height: 20),
-                      CustomTextFormField(
-                        label: 'Confirm Password',
-                        obscureText: true,
-                        onChanged: registerNotifier.onConfirmPasswordChanged,
-                        errorMessage: registerForm.isFormPosted ? registerForm.confirmPassword.errorMessage : null,
-                      ),
-                      const SizedBox(height: 30),
-                      SizedBox(
-                        width: double.infinity,
-                        child: CustomFilledButton(
-                          text: 'Register',
-                          buttonColor: const Color(0xFF08273A),
-                          onPressed: registerForm.isPosting
-                              ? null
-                              : () async {
-                                  await registerNotifier.onFormSubmit();
-                                  if (registerForm.isValid) {
-                                    if (context.mounted) {
-                                      showSnackBar(context, 'User registered successfully');
-                                      context.go('/login');
-                                    }
-                                  }
-                                },
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Basic User Information",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black54,
                         ),
                       ),
                       const SizedBox(height: 20),
+                      const _EmailInput(),
+                      const SizedBox(height: 20),
+                      const _UsernameInput(),
+                      const SizedBox(height: 20),
+                      const _PasswordInput(),
+                      const SizedBox(height: 20),
+                      const _FirstNameInput(),
+                      const SizedBox(height: 20),
+                      const _LastNameInput(),
+                      const SizedBox(height: 20),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Text(
-                            "Already have an account?",
-                            style: TextStyle(color: Colors.black54),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              context.go('/login');
+                          Checkbox(
+                            value: registerForm.termsAccepted,
+                            onChanged: (value) {
+                              ref
+                                  .read(registerFormProvider.notifier)
+                                  .onTermsAcceptedChanged(value ?? false);
                             },
-                            child: const Text(
-                              'Sign in here',
-                              style: TextStyle(color: Colors.blue),
+                          ),
+                          const Expanded(
+                            child: Text(
+                              "I accept the Terms and Conditions and Privacy Policy of PetTracker, ensuring the responsible and secure use of my personal data.",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
                             ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20),
+                      const _RegisterButton(),
                     ],
                   ),
                 ),
@@ -153,6 +130,102 @@ class RegisterScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EmailInput extends ConsumerWidget {
+  const _EmailInput();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final registerForm = ref.watch(registerFormProvider);
+
+    return CustomTextFormField(
+      label: 'Email',
+      keyboardType: TextInputType.emailAddress,
+      onChanged: ref.read(registerFormProvider.notifier).onEmailChanged,
+      errorMessage:
+          registerForm.isFormPosted ? registerForm.email.errorMessage : null,
+    );
+  }
+}
+
+class _UsernameInput extends ConsumerWidget {
+  const _UsernameInput();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final registerForm = ref.watch(registerFormProvider);
+    return CustomTextFormField(
+      label: 'Username',
+      keyboardType: TextInputType.text,
+      onChanged: ref.read(registerFormProvider.notifier).onUsernameChanged,
+      errorMessage:
+          registerForm.isFormPosted ? registerForm.username.errorMessage : null,
+    );
+  }
+}
+
+class _PasswordInput extends ConsumerWidget {
+  const _PasswordInput();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final registerForm = ref.watch(registerFormProvider);
+    return CustomTextFormField(
+      label: 'Password',
+      obscureText: true,
+      onChanged: ref.read(registerFormProvider.notifier).onPasswordChanged,
+      errorMessage:
+          registerForm.isFormPosted ? registerForm.password.errorMessage : null,
+    );
+  }
+}
+
+class _FirstNameInput extends ConsumerWidget {
+  const _FirstNameInput();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return CustomTextFormField(
+      label: 'First Name',
+      onChanged: ref.read(registerFormProvider.notifier).onFirstNameChanged,
+    );
+  }
+}
+
+class _LastNameInput extends ConsumerWidget {
+  const _LastNameInput();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return CustomTextFormField(
+      label: 'Last Name',
+      onChanged: ref.read(registerFormProvider.notifier).onLastNameChanged,
+    );
+  }
+}
+
+class _RegisterButton extends ConsumerWidget {
+  const _RegisterButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final registerForm = ref.watch(registerFormProvider);
+
+    return SizedBox(
+      width: double.infinity,
+      child: CustomFilledButton(
+        text: 'Register',
+        buttonColor: registerForm.isValid && registerForm.termsAccepted
+            ? const Color(0xFF08273A)
+            : Colors.grey,
+        onPressed: registerForm.isPosting || !registerForm.isValid
+            ? null
+            : () =>
+                ref.read(registerFormProvider.notifier).onFormSubmit(context),
       ),
     );
   }

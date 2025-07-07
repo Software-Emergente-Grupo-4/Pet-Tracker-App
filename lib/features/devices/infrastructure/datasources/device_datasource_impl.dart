@@ -19,7 +19,6 @@ class DeviceDatasourceImpl extends DeviceDatasource {
                 'Accept': 'application/json',
               },
             ));
-
   @override
   Future<Device> assignDeviceToUser(
       String deviceRecordId, String userId) async {
