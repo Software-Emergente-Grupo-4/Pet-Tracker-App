@@ -36,7 +36,9 @@ class HealthSummaryNotifier extends StateNotifier<HealthSummaryState> {
   final KeyValueStorageService storageService;
   final DeviceRepositoryImpl deviceRepository;
 
-  HealthSummaryNotifier(this.repository, this.storageService, this.deviceRepository) : super(HealthSummaryState()) {
+  HealthSummaryNotifier(
+      this.repository, this.storageService, this.deviceRepository)
+      : super(HealthSummaryState()) {
     loadSummaries();
   }
 
@@ -70,12 +72,11 @@ class HealthSummaryNotifier extends StateNotifier<HealthSummaryState> {
       }
 
       final isOwnedDevice = userDevices.any(
-        (device) =>
-            device.petTrackerDeviceRecordId == selectedDeviceRecordId,
+        (device) => device.petTrackerDeviceRecordId == selectedDeviceRecordId,
       );
 
       if (!isOwnedDevice) {
-        throw Exception('Unauthorized access to device geofences');
+        throw Exception('Unauthorized access');
       }
 
       final data = await repository.fetchHealthSummary(selectedDeviceRecordId);

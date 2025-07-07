@@ -5,12 +5,16 @@ import 'package:pet_tracker/features/vital-signs/domain/repositories/health_summ
 class HealthSummaryRepositoryImpl implements HealthSummaryRepository {
   final HealthSummaryDatasource remoteDataSource;
 
-  HealthSummaryRepositoryImpl({
-    required this.remoteDataSource
-  });
+  HealthSummaryRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<List<HealthSummary>> fetchHealthSummary(String deviceRecordId) async {
     return await remoteDataSource.fetchHealthSummary(deviceRecordId);
+  }
+
+  @override
+  Future<List<HealthSummary>> fetchHealthPrediction(
+      String deviceRecordId) async {
+    return await remoteDataSource.fetchHealthPrediction(deviceRecordId);
   }
 }
