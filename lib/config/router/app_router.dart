@@ -49,7 +49,7 @@ final goRouterProvider = Provider((ref) {
           ),
           GoRoute(
             path: '/chat',
-            builder: (context, state) => const ChatScreen(),
+            builder: (context, state) => ChatScreen(),
           ),
           GoRoute(
             path: '/vital-signs',
@@ -61,7 +61,8 @@ final goRouterProvider = Provider((ref) {
           ),
           GoRoute(
             path: '/geofences/create',
-            builder: (context, state) => const GeofenceDetailsScreen(isEditMode: false),
+            builder: (context, state) =>
+                const GeofenceDetailsScreen(isEditMode: false),
           ),
           GoRoute(
             path: '/geofences/detail/:id',
