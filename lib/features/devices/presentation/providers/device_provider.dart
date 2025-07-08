@@ -31,7 +31,7 @@ class DeviceNotifier extends StateNotifier<AsyncValue<List<Device>>> {
       await storageService.setKeyValue<String>(
           'selectedDeviceRecordId', device.petTrackerDeviceRecordId);
       await storageService.setKeyValue<String>(
-          'selectedApiKey', device.apiKey);
+          'selectedApiKey', device.apiKey); print("ApiKey seleccionado: ${device.apiKey}");
     } catch (e) {
       print("Error al seleccionar el dispositivo: $e");
     }
