@@ -9,7 +9,6 @@ class HealthStreamDatasourceImpl {
   HealthStreamDatasourceImpl({required this.baseUrl});
 
   Stream<HealthMeasure> connectToHealthStream(String roomId) {
-    // Cerrar la conexión previa si existe
     disconnect();
 
     final uri = Uri.parse('$baseUrl/health-measures-stream?room=$roomId');
@@ -17,13 +16,17 @@ class HealthStreamDatasourceImpl {
 
     return _channel!.stream.map((event) {
       try {
-        final jsonData = jsonDecode(event as String) as Map<String, dynamic>;
-        return HealthMeasure.fromJson(jsonData);
+        final jsonData = jsonDecode(event as String);
+        if (jsonData is List && jsonData.isNotEmpty) {
+          return HealthMeasure.fromJson(jsonData.first);
+        } else if (jsonData is Map<String, dynamic>) {
+          return HealthMeasure.fromJson(jsonData);
+        } else {
+          return HealthMeasure(bpm: null, spo2: null);
+        }
       } catch (e) {
-        return HealthMeasure(bpm: 0, spo2: 0);
+        return HealthMeasure(bpm: null, spo2: null);
       }
-    }).handleError((error) {
-      return HealthMeasure(bpm: 0, spo2: 0);
     });
   }
 

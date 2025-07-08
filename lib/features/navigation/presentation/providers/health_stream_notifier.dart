@@ -26,7 +26,6 @@ class HealthStreamNotifier extends StateNotifier<AsyncValue<HealthMeasure>> {
 
     try {
       _currentApiKey = await storageService.getValue<String>('selectedApiKey');
-
       if (_currentApiKey == null) {
         state = AsyncValue.error(
           'No API Key found',
@@ -81,7 +80,7 @@ class HealthStreamNotifier extends StateNotifier<AsyncValue<HealthMeasure>> {
     _noDataTimer?.cancel();
 
     _noDataTimer = Timer(const Duration(seconds: 5), () {
-      state = AsyncValue.data(HealthMeasure(bpm: 0, spo2: 0));
+      state = AsyncValue.data(HealthMeasure(bpm: null, spo2: null));
     });
   }
 

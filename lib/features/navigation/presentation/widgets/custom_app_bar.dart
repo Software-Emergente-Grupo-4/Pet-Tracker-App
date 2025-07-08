@@ -1,22 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:pet_tracker/features/auth/presentation/providers/auth_provider.dart';
 import 'package:pet_tracker/features/navigation/presentation/widgets/health_stats_bar.dart';
-import 'package:pet_tracker/features/navigation/presentation/providers/health_stream_provider.dart'; // Importa el provider
-import 'package:go_router/go_router.dart';
+import 'package:pet_tracker/features/navigation/presentation/providers/health_stream_provider.dart';
+import 'package:pet_tracker/shared/infrastructure/services/key_value_storage_provider.dart';
+
+final selectedApiKeyStreamProvider = StreamProvider<String?>((ref) {
+  final storage = ref.read(keyValueStorageServiceProvider);
+  return Stream.periodic(const Duration(seconds: 1)).asyncMap(
+    (_) => storage.getValue<String>('selectedApiKey'),
+  );
+});
 
 class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Acceder al estado del authProvider
     final authState = ref.watch(authProvider);
     final userName = authState.userProfile?.firstName ?? 'Usuario';
 
-    // Observar los datos del WebSocket
-    final healthState = ref.watch(healthStreamProvider);
+    final selectedApiKeyAsync = ref.watch(selectedApiKeyStreamProvider);
+
+    final healthState = selectedApiKeyAsync.when(
+      data: (apiKey) {
+        if (apiKey == null) {
+          return const AsyncValue.error('No API Key found', StackTrace.empty);
+        }
+
+        final health = ref.watch(healthStreamProvider);
+        return health;
+      },
+      loading: () => const AsyncValue.loading(),
+      error: (e, s) => AsyncValue.error(e, s),
+    );
 
     return Container(
       color: Colors.white,
@@ -41,9 +61,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        context.go('/devices');
-                      },
+                      onTap: () => context.go('/devices'),
                       child: SvgPicture.asset(
                         'assets/images/dog-collar.svg',
                         width: 24,
@@ -82,8 +100,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                           ref.read(authProvider.notifier).logout();
                         }
                       },
-                      itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<String>>[
+                      itemBuilder: (BuildContext context) => [
                         PopupMenuItem<String>(
                           value: 'profile',
                           child: Text(
@@ -127,7 +144,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       ],
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
@@ -135,16 +152,16 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
             color: const Color(0xFF08273A),
             child: healthState.when(
               data: (data) => HealthStatsBar(
-                bpm: data.bpm.toString(),
-                spo2: data.spo2.toString(),
+                bpm: data.bpm?.toString() ?? '...',
+                spo2: data.spo2?.toString() ?? '...',
               ),
               loading: () => const HealthStatsBar(
                 bpm: '...',
                 spo2: '...',
               ),
-              error: (error, stackTrace) => const HealthStatsBar(
-                bpm: 'Err',
-                spo2: 'Err',
+              error: (_, __) => const HealthStatsBar(
+                bpm: '...',
+                spo2: '...',
               ),
             ),
           ),

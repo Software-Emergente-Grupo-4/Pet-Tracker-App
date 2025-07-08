@@ -1,6 +1,6 @@
 class HealthMeasure {
-  final int bpm;
-  final int spo2;
+  final int? bpm;
+  final int? spo2;
 
   HealthMeasure({
     required this.bpm,
@@ -8,9 +8,12 @@ class HealthMeasure {
   });
 
   factory HealthMeasure.fromJson(Map<String, dynamic> json) {
+    final bpmRaw = json['bpm'];
+    final spo2Raw = json['spo2'];
+
     return HealthMeasure(
-      bpm: json['bpm'] as int,
-      spo2: json['spo2'] as int,
+      bpm: bpmRaw is int ? bpmRaw : int.tryParse(bpmRaw?.toString() ?? ''),
+      spo2: spo2Raw is int ? spo2Raw : int.tryParse(spo2Raw?.toString() ?? ''),
     );
   }
 
